@@ -1,4 +1,4 @@
-name: Build and Deploy Docker image
+name: Docker Build and Push
 
 on:
   push:
@@ -11,31 +11,38 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    # 1. Revisar el código
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+    # 2. Configurar Docker Buildx (si es necesario para construir imágenes)
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
 
-      - name: Cache Docker layers
-        uses: actions/cache@v4
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
+    # 3. Iniciar sesión en Docker Hub
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build Docker image
-        run: |
-          docker build -t my-image-name .
+    # 4. (Opcional) Instalar dependencias si es un proyecto Node.js, Python, etc.
+    - name: Set up Node.js (Ejemplo con Node.js)
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16' # Cambia según la versión que uses
+    - run: npm install # Instala las dependencias de tu proyecto
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+    # 5. Construir la imagen Docker
+    - name: Build Docker image
+      run: docker build -t ${{ secrets.DOCKER_USERNAME }}/welcome-to-docker .
 
-      - name: Push Docker image to Docker Hub
-        run: |
-          docker push my-image-name
+    # 6. Etiquetar la imagen
+    - name: Tag Docker image
+      run: docker tag ${{ secrets.DOCKER_USERNAME }}/welcome-to-docker ${{ secrets.DOCKER_USERNAME }}/welcome-to-docker:${{ github.sha }}
+
+    # 7. Subir la imagen a Docker Hub
+    - name: Push Docker image
+      run: docker push ${{ secrets.DOCKER_USERNAME }}/welcome-to-docker
