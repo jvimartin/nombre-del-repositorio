@@ -33,7 +33,7 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '16' # Cambia según la versión que uses
-    - run: npm install # Instala las dependencias de tu proyecto
+    - run: npm install # Instala las dependencias de tu proyect
 
     # 5. Construir la imagen Docker
     - name: Build Docker image
