@@ -2,11 +2,8 @@ name: Docker Build and Push
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+    tags:
+      - 'v*.*.*'  # Se ejecuta cuando se hace un push con una etiqueta como 'v1.1.1'
 
 jobs:
   build:
@@ -28,25 +25,21 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # 4. (Opcional) Instalar dependencias si es un proyecto Node.js
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '16'
-      - run: npm install
+      # 4. Obtener la versión desde la etiqueta
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
 
       # 5. Construir la imagen Docker
       - name: Build Docker image
-        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/welcome-to-docker .
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/welcome-to-docker:${{ env.VERSION }} .
 
-      # 6. Etiquetar la imagen con el hash del commit y 'latest'
-      - name: Tag Docker image
-        run: |
-          docker tag ${{ secrets.DOCKER_USERNAME }}/welcome-to-docker ${{ secrets.DOCKER_USERNAME }}/welcome-to-docker:${{ github.sha }}
-          docker tag ${{ secrets.DOCKER_USERNAME }}/welcome-to-docker ${{ secrets.DOCKER_USERNAME }}/welcome-to-docker:latest
+      # 6. Etiquetar la imagen como 'latest'
+      - name: Tag Docker image as latest
+        run: docker tag ${{ secrets.DOCKER_USERNAME }}/welcome-to-docker:${{ env.VERSION }} ${{ secrets.DOCKER_USERNAME }}/welcome-to-docker:latest
 
-      # 7. Subir ambas etiquetas a Docker Hub
+      # 7. Subir las imágenes a Docker Hub
       - name: Push Docker images
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/welcome-to-docker:${{ github.sha }}
+          docker push ${{ secrets.DOCKER_USERNAME }}/welcome-to-docker:${{ env.VERSION }}
           docker push ${{ secrets.DOCKER_USERNAME }}/welcome-to-docker:latest
