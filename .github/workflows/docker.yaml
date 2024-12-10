@@ -13,36 +13,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. Revisar el código
-    - name: Checkout code
-      uses: actions/checkout@v2
+      # 1. Revisar el código
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    # 2. Configurar Docker Buildx (si es necesario para construir imágenes)
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      # 2. Configurar Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-    # 3. Iniciar sesión en Docker Hub
-    - name: Log in to Docker Hub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+      # 3. Iniciar sesión en Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-    # 4. (Opcional) Instalar dependencias si es un proyecto Node.js, Python, etc.
-    - name: Set up Node.js (Ejemplo con Node.js)
-      uses: actions/setup-node@v3
-      with:
-        node-version: '16' # Cambia según la versión que uses
-    - run: npm install # Instala las dependencias de tu proyect
+      # 4. (Opcional) Instalar dependencias si es un proyecto Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+      - run: npm install
 
-    # 5. Construir la imagen Docker
-    - name: Build Docker image
-      run: docker build -t ${{ secrets.DOCKER_USERNAME }}/welcome-to-docker .
+      # 5. Construir la imagen Docker
+      - name: Build Docker image
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/welcome-to-docker .
 
-    # 6. Etiquetar la imagen
-    - name: Tag Docker image
-      run: docker tag ${{ secrets.DOCKER_USERNAME }}/welcome-to-docker ${{ secrets.DOCKER_USERNAME }}/welcome-to-docker:${{ github.sha }}
+      # 6. Etiquetar la imagen con el hash del commit y 'latest'
+      - name: Tag Docker image
+        run: |
+          docker tag ${{ secrets.DOCKER_USERNAME }}/welcome-to-docker ${{ secrets.DOCKER_USERNAME }}/welcome-to-docker:${{ github.sha }}
+          docker tag ${{ secrets.DOCKER_USERNAME }}/welcome-to-docker ${{ secrets.DOCKER_USERNAME }}/welcome-to-docker:latest
 
-    # 7. Subir la imagen a Docker Hub
-    - name: Push Docker image
-      run: docker push ${{ secrets.DOCKER_USERNAME }}/welcome-to-docker
+      # 7. Subir ambas etiquetas a Docker Hub
+      - name: Push Docker images
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/welcome-to-docker:${{ github.sha }}
+          docker push ${{ secrets.DOCKER_USERNAME }}/welcome-to-docker:latest
