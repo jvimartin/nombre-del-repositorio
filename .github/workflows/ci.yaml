@@ -1,0 +1,32 @@
+name: CI - Build and Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. Revisar el código
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # 2. Configurar Node.js (asegurate de usar la versión correcta de Node)
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'  # Cambia según la versión de Node que usas
+
+      # 3. Instalar dependencias
+      - name: Install dependencies
+        run: npm install
+
+      # 4. Ejecutar la construcción para comprobar errores
+      - name: Build the app
+        run: npm run build  # Si usas otro script para construir, cámbialo
